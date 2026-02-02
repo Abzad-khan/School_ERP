@@ -6,7 +6,7 @@ import Register from "./pages/auth/Register";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import AppLayout from "./components/layout/AppLayout";
 
-// Admin pages
+// Admin pages features
 import Dashboard from "./pages/admin/Dashboard";
 import Students from "./pages/admin/Students";
 import Assignments from "./pages/admin/Assignments";
