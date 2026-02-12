@@ -69,3 +69,7 @@ App runs on `http://localhost:5173`
 - `GET /api/chat/conversations`, `POST /api/chat`
 
 All protected APIs require: `Authorization: Bearer <token>`
+
+## Deployment
+
+This project is currently deployed on AWS and can be viewed at: http://school-management-deep.s3-website.ap-south-1.amazonaws.com
