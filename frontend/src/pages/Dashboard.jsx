@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import WelcomeCard from '../components/WelcomeCard';
 import { dashboardApi } from '../api/api';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -47,6 +48,7 @@ export default function Dashboard() {
 
   return (
     <div>
+      <WelcomeCard />
       <h1 className="text-2xl font-bold text-slate-800 mb-6">Dashboard</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
         {cards.map((card) => (
