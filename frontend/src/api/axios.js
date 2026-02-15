@@ -24,10 +24,17 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Handle JWT verification failure (401) or invalid token (403)
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      // Clear authentication data from localStorage
       localStorage.removeItem('token');
       localStorage.removeItem('role');
       localStorage.removeItem('username');
+      
+      // prompt user to login again
+      alert('Your session has expired. Please log in again.');
+      
+      // Redirect to login page
       window.location.href = '/login';
     }
     return Promise.reject(error);
