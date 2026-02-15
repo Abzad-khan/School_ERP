@@ -19,8 +19,8 @@ export default function Login() {
   try {
     const data = await login(username, password);
 
-    // FIX: backend does not send username → use entered username
-    authLogin(data.token, data.role, username);
+    authLogin(data.token, data.role, data.username);
+
 
     // Role-based redirect (safe + future-proof)
     navigate('/dashboard', { replace: true });

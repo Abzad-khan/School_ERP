@@ -32,6 +32,9 @@ api.interceptors.response.use(
       localStorage.removeItem('username');
       
       // prompt user to login again
+
+      error.response?.status === 401 ? 
+      alert('Please log in using valid credentials .') : 
       alert('Your session has expired. Please log in again.');
       
       // Redirect to login page
