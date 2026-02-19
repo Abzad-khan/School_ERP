@@ -8,6 +8,10 @@ import com.school.erp.entity.User;
 import com.school.erp.repository.SchoolClassRepository;
 import com.school.erp.repository.StudentRepository;
 import com.school.erp.repository.UserRepository;
+import com.school.erp.repository.AssignmentSubmissionRepository;
+import com.school.erp.repository.AttendanceRepository;
+import com.school.erp.repository.ChatMessageRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,6 +29,9 @@ public class StudentService {
     private final UserRepository userRepository;
     private final SchoolClassRepository schoolClassRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AttendanceRepository attendanceRepository;
+    private final AssignmentSubmissionRepository assignmentSubmissionRepository;
+    private final ChatMessageRepository chatMessageRepository;
 
     @Transactional(readOnly = true)
     public List<StudentDto> getAllStudents() {
@@ -57,6 +64,10 @@ public class StudentService {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new RuntimeException("Username already exists: " + request.getUsername());
         }
+        
+        // Validate name, phone
+        validateStudentData(request.getName(), request.getPhone(), request.getParent());
+        
         User user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -69,7 +80,7 @@ public class StudentService {
                 : null;
 
         Student student = Student.builder()
-                .name(request.getName() != null ? request.getName() : "Student")
+                .name(request.getName())
                 .rollNo(request.getRollNo() != null ? request.getRollNo() : "0")
                 .section(request.getSection() != null ? request.getSection() : "A")
                 .parent(request.getParent())
@@ -87,6 +98,10 @@ public class StudentService {
     public StudentDto updateStudent(Long id, String name, String rollNo, String section, Long classId, String parent, String phone) {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found: " + id));
+        
+        // Validate name, phone
+        validateStudentData(name, phone, parent);
+        
         if (name != null) student.setName(name);
         if (rollNo != null) student.setRollNo(rollNo);
         if (section != null) student.setSection(section);
@@ -105,7 +120,39 @@ public class StudentService {
     public void deleteStudent(Long id) {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found: " + id));
+        
+        // Delete all related data first to avoid foreign key constraint violations
+        if (student.getUser() != null && student.getUser().getId() != null) {
+            Long userId = student.getUser().getId();
+            chatMessageRepository.deleteAll(chatMessageRepository.findBySenderId(userId));
+            chatMessageRepository.deleteAll(chatMessageRepository.findByReceiverId(userId));
+        }
+        
+        attendanceRepository.deleteAll(attendanceRepository.findByStudentId(id));
+        assignmentSubmissionRepository.deleteAll(assignmentSubmissionRepository.findByStudentId(id));
+        studentRepository.delete(student);
         userRepository.delete(student.getUser());
+    }
+
+    //Validate student data - name and phone fields are mandatory
+    private void validateStudentData(String name, String phone, String parent) {
+        if (name == null || name.isEmpty()) {
+            throw new RuntimeException("Name is required");
+        }
+        if (!name.matches("^[a-zA-Z\\s]+$")) {
+            throw new RuntimeException("Name should only contain letters and spaces");
+        }
+
+        if (!parent.matches("^[a-zA-Z\\s]+$")) {
+            throw new RuntimeException("Parent name should only contain letters and spaces");
+        }
+        
+        if (phone == null || phone.isEmpty()) {
+            throw new RuntimeException("Phone is required");
+        }
+        if (!phone.matches("^\\d{10}$")) {
+            throw new RuntimeException("Phone number should be exactly 10 digits");
+        }
     }
 
     private StudentDto toDto(Student s) {
